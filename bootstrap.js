@@ -1,110 +1,49 @@
-if (typeof Zotero == "undefined") {
-  var Zotero;
-  var window;
+// Zotero 7+ bootstrap plugin. `Zotero` and `Services` are available in this scope, and
+// startup() is only called once Zotero has been initialized.
+
+var AddCollectionTag;
+
+async function startup({ id, version, rootURI }) {
+  Services.scriptloader.loadSubScript(rootURI + "addCollectionTag.js");
+  Zotero.debug("Add Collection Tag: starting " + version);
+  await AddCollectionTag.init({ id, version, rootURI });
+  // Handy for debugging from Tools → Developer → Run JavaScript
+  Zotero.AddCollectionTag = AddCollectionTag;
+
+  Zotero.PreferencePanes.register({
+    pluginID: id,
+    id: "addcollectiontag-prefpane",
+    src: rootURI + "preferences.xhtml",
+    label: "Add Collection Tag",
+  });
+
+  for (const window of Zotero.getMainWindows()) {
+    AddCollectionTag.addToWindow(window);
+  }
 }
 
-// In Zotero 6, bootstrap methods are called before Zotero is initialized, and using include.js
-// to get the Zotero XPCOM service would risk breaking Zotero startup. Instead, wait for the main
-// Zotero window to open and get the Zotero object from there.
-//
-// In Zotero 7, bootstrap methods are not called until Zotero is initialized, and the 'Zotero' is
-// automatically made available.
-async function waitForZotero() {
-  if (typeof Zotero != "undefined") {
-    await Zotero.initializationPromise;
+function onMainWindowLoad({ window }) {
+  AddCollectionTag?.addToWindow(window);
+}
+
+function onMainWindowUnload({ window }) {
+  AddCollectionTag?.removeFromWindow(window);
+}
+
+async function shutdown({ id, version, rootURI }, reason) {
+  if (reason == APP_SHUTDOWN) {
+    // Still save the record of added tags, but skip window cleanup
+    await AddCollectionTag?.shutdown();
     return;
   }
-
-  var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-  var windows = Services.wm.getEnumerator("navigator:browser");
-  var found = false;
-  while (windows.hasMoreElements()) {
-    let win = windows.getNext();
-    if (win.Zotero) {
-      window = win;
-      Zotero = win.Zotero;
-      found = true;
-      break;
-    }
+  for (const window of Zotero.getMainWindows()) {
+    AddCollectionTag?.removeFromWindow(window);
   }
-  if (!found) {
-    await new Promise((resolve) => {
-      var listener = {
-        onOpenWindow: function (aWindow) {
-          // Wait for the window to finish loading
-          let domWindow = aWindow
-            .QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowInternal || Ci.nsIDOMWindow);
-          domWindow.addEventListener(
-            "load",
-            function () {
-              domWindow.removeEventListener("load", arguments.callee, false);
-              if (domWindow.Zotero) {
-                Services.wm.removeListener(listener);
-                Zotero = domWindow.Zotero;
-                resolve();
-              }
-            },
-            false,
-          );
-        },
-      };
-      Services.wm.addListener(listener);
-    });
-  }
-  await Zotero.initializationPromise;
+  await AddCollectionTag?.shutdown();
+  delete Zotero.AddCollectionTag;
+  AddCollectionTag = undefined;
 }
 
-async function install() {
-  await waitForZotero();
+function install() {}
 
-  // Retrieve the window, if needed
-  if (!window) {
-    var windows = Zotero.getMainWindows();
-    for (let win of windows) {
-      if (!win.ZoteroPane) continue;
-      window = win;
-      break;
-    }
-  }
-
-  Zotero.AddCollectionTag = {
-    init: function () {
-      const notifierID = Zotero.Notifier.registerObserver(
-        this.notifierCallback,
-        ["item", "item-tag"],
-      );
-      window.addEventListener(
-        "unload",
-        function (e) {
-          Zotero.Notifier.unregisterObserver(notifierID);
-        },
-        false,
-      );
-    },
-
-    notifierCallback: {
-      notify: function (event, type, ids, extraData) {
-        const sel_col =
-          Zotero.getActiveZoteroPane().getSelectedCollection().name;
-        if (event == "add" && type == "item") {
-          const items = Zotero.Items.get(ids);
-          for (let i = 0; i < items.length; ++i) {
-            items[i].addTag(sel_col, 1);
-            items[i].saveTx();
-          }
-        }
-      },
-    },
-  };
-  window.addEventListener("add", Zotero.AddCollectionTag.init(), false);
-}
-
-async function startup({
-  id,
-  version,
-  resourceURI,
-  rootURI = resourceURI.spec,
-}) {}
-function shutdown() {}
 function uninstall() {}

@@ -1,0 +1,22 @@
+<vbox id="addcollectiontag-prefpane">
+  <groupbox>
+    <label><html:h2>Collection tags</html:h2></label>
+    <checkbox id="addcollectiontag-autoSync"
+              preference="extensions.addcollectiontag.autoSync"
+              label="Keep tags in sync automatically when items or collections change"/>
+    <checkbox id="addcollectiontag-removeTags"
+              preference="extensions.addcollectiontag.removeTags"
+              label="Remove the tag when an item leaves a collection, or the collection is renamed or deleted"/>
+    <checkbox id="addcollectiontag-includeParents"
+              preference="extensions.addcollectiontag.includeParents"
+              label="Also add the names of parent collections"/>
+    <checkbox id="addcollectiontag-tagChildItems"
+              preference="extensions.addcollectiontag.tagChildItems"
+              label="Also tag attachments and notes"/>
+    <html:p>
+      To tag items already in your library, or after changing these settings while
+      automatic syncing is off, use Tools → Sync Collection Tags. Only tags added by this
+      plugin are ever removed; tags you add yourself are left alone.
+    </html:p>
+  </groupbox>
+</vbox>

@@ -1,16 +1,16 @@
 {
   "manifest_version": 2,
   "name": "Zotero Add Collection Tag",
-  "version": "0.0.2",
-  "author": "Zar_Rok",
-  "description": "Zotero plugin/addon to automatically include the collection's name as a tag of an added item",
-  "homepage_url": "https://github.com/Zar-rok/Zotero-Add-Collection-Tag",
+  "version": "0.3.0",
+  "author": "Gaston Ravanas (based on Zar_Rok's original)",
+  "description": "Automatically tags items with the names of the collections they are in, and keeps those tags in sync",
+  "homepage_url": "https://github.com/gaston-ravanas/Zotero-Add-Collection-Tag",
   "applications": {
     "zotero": {
-      "id": "zar-rok@live.fr",
-      "update_url": "https://github.com/Zar-rok/Zotero-Add-Collection-Tag",
+      "id": "add-collection-tag@gaston-ravanas",
+      "update_url": "https://github.com/gaston-ravanas/Zotero-Add-Collection-Tag/releases/latest/download/updates.json",
       "strict_min_version": "6.999",
-      "strict_max_version": "7.0.*"
+      "strict_max_version": "10.*"
     }
   }
 }
